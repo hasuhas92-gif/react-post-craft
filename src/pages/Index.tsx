@@ -1,12 +1,55 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useQuery } from "@tanstack/react-query";
+import { fetchPosts } from "@/lib/api";
+import Navbar from "@/components/Navbar";
+import PostCard from "@/components/PostCard";
+import { Skeleton } from "@/components/ui/skeleton";
+import { AlertCircle } from "lucide-react";
 
 const Index = () => {
+  const { data: posts, isLoading, error } = useQuery({
+    queryKey: ["posts"],
+    queryFn: fetchPosts,
+  });
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-[var(--gradient-hero)]">
+      <Navbar />
+      
+      <main className="container mx-auto px-4 py-12">
+        <header className="mb-12 text-center">
+          <h1 className="mb-4 text-5xl font-bold tracking-tight">
+            Discover Amazing Stories
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Read, write, and share your ideas with a community of passionate writers
+          </p>
+        </header>
+
+        {error && (
+          <div className="flex flex-col items-center justify-center gap-4 py-12">
+            <AlertCircle className="h-12 w-12 text-destructive" />
+            <p className="text-lg text-muted-foreground">Failed to load posts. Please try again.</p>
+          </div>
+        )}
+
+        {isLoading && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="space-y-4">
+                <Skeleton className="h-48 w-full rounded-lg" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {posts && (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {posts.map((post) => (
+              <PostCard key={post.id} post={post} />
+            ))}
+          </div>
+        )}
+      </main>
     </div>
   );
 };
