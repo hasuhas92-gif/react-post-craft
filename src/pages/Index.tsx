@@ -1,14 +1,34 @@
 import { useQuery } from "@tanstack/react-query";
-import { fetchPosts } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import PostCard from "@/components/PostCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
 
 const Index = () => {
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+
   const { data: posts, isLoading, error } = useQuery({
-    queryKey: ["posts"],
-    queryFn: fetchPosts,
+    queryKey: ["posts", selectedCategory],
+    queryFn: async () => {
+      let query = supabase
+        .from("posts")
+        .select(`
+          *,
+          profiles:user_id (username)
+        `)
+        .order("created_at", { ascending: false });
+
+      if (selectedCategory !== "all") {
+        query = query.eq("category", selectedCategory as any);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
   });
 
   return (
@@ -23,6 +43,23 @@ const Index = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             Read, write, and share your ideas with a community of passionate writers
           </p>
+          
+          <div className="mt-8 max-w-xs mx-auto">
+            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="comedy">Comedy</SelectItem>
+                <SelectItem value="news">News</SelectItem>
+                <SelectItem value="sports">Sports</SelectItem>
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </header>
 
         {error && (

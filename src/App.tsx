@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import PostDetail from "./pages/PostDetail";
 import CreatePost from "./pages/CreatePost";
 import EditPost from "./pages/EditPost";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/post/:id" element={<PostDetail />} />
           <Route path="/create" element={<CreatePost />} />
           <Route path="/edit/:id" element={<EditPost />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

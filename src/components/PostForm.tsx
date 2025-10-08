@@ -4,14 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 
 interface PostFormProps {
   initialData?: {
     title: string;
     body: string;
+    category?: string;
   };
-  onSubmit: (data: { title: string; body: string; userId: number }) => Promise<any>;
+  onSubmit: (data: { title: string; body: string; category: string }) => Promise<any>;
   isLoading?: boolean;
   submitText?: string;
 }
@@ -19,10 +21,11 @@ interface PostFormProps {
 const PostForm = ({ initialData, onSubmit, isLoading, submitText = "Publish" }: PostFormProps) => {
   const [title, setTitle] = useState(initialData?.title || "");
   const [body, setBody] = useState(initialData?.body || "");
+  const [category, setCategory] = useState(initialData?.category || "other");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSubmit({ title, body, userId: 1 });
+    await onSubmit({ title, body, category });
   };
 
   return (
@@ -43,6 +46,23 @@ const PostForm = ({ initialData, onSubmit, isLoading, submitText = "Publish" }: 
               required
               className="text-lg"
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">Category</Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger id="category">
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="comedy">Comedy</SelectItem>
+                <SelectItem value="news">News</SelectItem>
+                <SelectItem value="sports">Sports</SelectItem>
+                <SelectItem value="technology">Technology</SelectItem>
+                <SelectItem value="lifestyle">Lifestyle</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           
           <div className="space-y-2">

@@ -1,27 +1,62 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
-import { fetchPost, updatePost } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import PostForm from "@/components/PostForm";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
+import { useEffect } from "react";
 
 const EditPost = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user, loading: authLoading } = useAuth();
 
   const { data: post, isLoading } = useQuery({
     queryKey: ["post", id],
-    queryFn: () => fetchPost(Number(id)),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("posts")
+        .select(`*, profiles:user_id (username)`)
+        .eq("id", id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
     enabled: !!id,
   });
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/auth");
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
+    if (post && user && post.user_id !== user.id) {
+      toast.error("You can only edit your own posts");
+      navigate("/");
+    }
+  }, [post, user, navigate]);
+
   const updateMutation = useMutation({
-    mutationFn: (data: { title: string; body: string; userId: number }) =>
-      updatePost(Number(id), data),
+    mutationFn: async (data: { title: string; body: string; category: string }) => {
+      const { error } = await supabase
+        .from("posts")
+        .update({
+          title: data.title,
+          body: data.body,
+          category: data.category as any,
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
     onSuccess: () => {
       toast.success("Post updated successfully!");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -70,7 +105,7 @@ const EditPost = () => {
         </Button>
 
         <PostForm
-          initialData={{ title: post.title, body: post.body }}
+          initialData={{ title: post.title, body: post.body, category: post.category }}
           onSubmit={(data) => updateMutation.mutateAsync(data)}
           isLoading={updateMutation.isPending}
           submitText="Update Post"
